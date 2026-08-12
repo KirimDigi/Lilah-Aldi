@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" prefix="og: https://ogp.me/ns#">
 <head>
 	<meta charset="UTF-8">
@@ -7,12 +7,12 @@
 <title>The Wedding Of Lilah &amp; Cule</title>
 <link rel="icon" href="KirimDigi.ico" type="image/x-icon">
 <link rel="shortcut icon" href="KirimDigi.ico" type="image/x-icon">
-<meta name="description" content=", hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
+<meta name="description" content="hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
 <meta name="robots" content="nofollow, noindex">
 <meta property="og:locale" content="id_ID">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Lilah 💛 Cule">
-<meta property="og:description" content=", hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
+<meta property="og:description" content="hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
 <meta property="og:url" content="https://invitimo.my.id/motion-11/">
 <meta property="og:site_name" content="Digital Wedding Invitation">
 <meta property="article:section" content="Undangan Pernikahan">
@@ -27,7 +27,7 @@
 <meta property="article:modified_time" content="2026-09-13T16:59:30+07:00">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lilah 💛 Cule">
-<meta name="twitter:description" content=", hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
+<meta name="twitter:description" content="hadiri acara pernikahan Lilah &amp; Cule. pada hari Minggu. 13 September 2026 Ya!">
 <meta name="twitter:image" content="https://i.pinimg.com/736x/aa/d2/0e/aad20e38bb8d366d1cfd2a343e551de6.jpg">
 <meta name="twitter:label1" content="Ditulis oleh">
 <meta name="twitter:data1" content="kekondangan">
@@ -3219,7 +3219,7 @@ updateGuestName();
 <script>
 // Integrasi Google Apps Script RSVP & Wishes
 jQuery(document).ready(function($) {
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQp72V0JqE0_5C5Ppx1Pypd0oR804pL4W-8c4_zZ7804pL4W-8/exec"; // Placeholder URL, user will replace it when deployed
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqEKvTby_YhLdc4-cb69HfszVnKZUZqlvklGbOm68q_AKPG-RImW3GyF1VX6QLqYXh/exec"; // Placeholder URL, user will replace it when deployed
     const $wishesContainer = $('#saic-container-comment-27031');
     const $toggleBtn = $('#toggle-wishes-btn');
     let isWishesVisible = false;
@@ -3244,23 +3244,33 @@ jQuery(document).ready(function($) {
     // Fungsi mengambil data ucapan dari Google Sheets
     function loadWishes() {
         $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px;">Memuat ucapan...</li>');
+        console.log('loadWishes: Memulai fetch dari URL:', SCRIPT_URL);
         
         // Cek jika SCRIPT_URL masih placeholder
         if (SCRIPT_URL && SCRIPT_URL.includes("exec") && SCRIPT_URL.startsWith("https://script.google.com")) {
             // Lakukan fetch
             fetch(SCRIPT_URL)
-                .then(res => res.json())
                 .then(res => {
+                    console.log('loadWishes: Fetch response status:', res.status, res.statusText);
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status + ' (' + res.statusText + ')');
+                    }
+                    return res.json();
+                })
+                .then(res => {
+                    console.log('loadWishes: parsed JSON:', res);
                     if (res.status === 'success') {
                         renderWishes(res.data);
                     } else {
-                        $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px; color:red;">Gagal memuat ucapan.</li>');
+                        $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px; color:red;">Gagal memuat ucapan: ' + (res.message || 'Error tidak diketahui') + '</li>');
                     }
                 })
-                .catch(() => {
-                    $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px; color:red;">Gagal terhubung ke Google Sheets. Pastikan Web App Apps Script sudah dideploy.</li>');
+                .catch(err => {
+                    console.error('loadWishes: Terjadi error:', err);
+                    $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px; color:red;">Gagal terhubung ke Google Sheets: ' + err.message + '. Silakan pastikan Web App Apps Script sudah dideploy dengan benar (Who has access: Anyone).</li>');
                 });
         } else {
+            console.warn('loadWishes: SCRIPT_URL belum dikonfigurasi dengan benar.');
             $wishesContainer.html('<li style="text-align:center; list-style:none; padding:10px; color:orange;">Silakan masukkan URL Web App Apps Script Anda di baris script index.html terlebih dahulu.</li>');
         }
     }
@@ -3275,9 +3285,22 @@ jQuery(document).ready(function($) {
         // Urutkan ucapan dari yang terbaru (DESC)
         const sortedData = [...data].reverse();
         sortedData.forEach(item => {
-            const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('id-ID', {
-                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-            }) : '';
+            let dateStr = '';
+            try {
+                if (item.timestamp) {
+                    const parsedDate = new Date(item.timestamp);
+                    if (!isNaN(parsedDate.getTime())) {
+                        dateStr = parsedDate.toLocaleDateString('id-ID', {
+                            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                    } else {
+                        // Jika format tanggal default tidak dapat diparsing
+                        dateStr = String(item.timestamp);
+                    }
+                }
+            } catch(e) {
+                dateStr = String(item.timestamp);
+            }
             const kehadiranText = item.kehadiran === 'present' ? 'Hadir' : (item.kehadiran === 'notpresent' ? 'Tidak Hadir' : 'Ragu-ragu');
             const kehadiranClass = item.kehadiran === 'present' ? 'saic-present' : 'saic-absent';
             const jumlahText = item.jumlah ? ` (${item.jumlah} orang)` : '';
@@ -3342,6 +3365,8 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        console.log('Form Submit: Mengirim payload:', payload);
+
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', // Untuk mencegah error CORS pada redirect Apps Script
@@ -3350,7 +3375,8 @@ jQuery(document).ready(function($) {
             },
             body: JSON.stringify(payload)
         })
-        .then(() => {
+        .then(res => {
+            console.log('Form Submit: Berhasil dikirim (mode: no-cors). Response:', res);
             alert('Ucapan dan konfirmasi kehadiran Anda berhasil dikirim!');
             $('#author').val('');
             $('#attendance').val('');
@@ -3364,7 +3390,8 @@ jQuery(document).ready(function($) {
             }
         })
         .catch(err => {
-            alert('Terjadi kesalahan saat mengirim ucapan. Silakan coba lagi.');
+            console.error('Form Submit: Gagal dikirim:', err);
+            alert('Terjadi kesalahan saat mengirim ucapan: ' + err.message + '. Silakan coba lagi.');
             $submitBtn.val(originalVal).prop('disabled', false);
         });
     });
